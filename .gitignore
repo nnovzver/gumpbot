@@ -22,3 +22,9 @@ _testmain.go
 *.exe
 *.test
 *.prof
+
+# Telegram API bot token
+secret_token
+
+# json API dump
+json_dump

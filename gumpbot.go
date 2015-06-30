@@ -4,10 +4,12 @@ import "net/http"
 import "fmt"
 import "log"
 import "io"
+import "os"
 import "time"
 import "encoding/json"
 import "strconv"
 import "io/ioutil"
+import "flag"
 
 func readSecreteToken() string {
 	token, err := ioutil.ReadFile("./secret_token")
@@ -26,6 +28,19 @@ type Response struct {
 }
 
 func main() {
+	var dumpFlag = flag.Bool("d", false, "dump json response into file json_dump")
+	flag.Parse()
+
+	var dumpFile *os.File
+	var err error
+	if *dumpFlag {
+		dumpFile, err = os.OpenFile("json_dump", os.O_CREATE|os.O_RDWR, 0600)
+		if err != nil {
+			log.Fatal("os.OpenFile", err)
+		}
+	}
+	defer dumpFile.Close()
+
 	var msg_offset int64 = 0
 
 	for {
@@ -34,7 +49,14 @@ func main() {
 			log.Fatal("http.Get", err)
 		}
 
-		dec := json.NewDecoder(resp.Body)
+		var respReader io.Reader
+		if *dumpFlag {
+			respReader = io.TeeReader(resp.Body, dumpFile)
+		} else {
+			respReader = resp.Body
+		}
+
+		dec := json.NewDecoder(respReader)
 		for {
 			fmt.Println("----")
 			var v map[string]interface{}
