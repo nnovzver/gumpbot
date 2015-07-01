@@ -10,14 +10,42 @@ import "encoding/json"
 import "strconv"
 import "io/ioutil"
 import "flag"
+import "encoding/binary"
+
+const (
+	secret_token_file string = "secret_token"
+	msg_offset_file   string = "msg_offset"
+)
 
 func readSecreteToken() string {
-	token, err := ioutil.ReadFile("./secret_token")
+	token, err := ioutil.ReadFile(secret_token_file)
 	if err != nil {
 		panic(err)
 	}
 
 	return string(token)
+}
+
+func readInt64File(fname string) int64 {
+	f, err := os.OpenFile(fname, os.O_CREATE|os.O_RDONLY, 0600)
+	if err != nil {
+		log.Fatal("os.OpenFile", err)
+	}
+	var offset int64
+	// ignore error offset = 0
+	binary.Read(f, binary.LittleEndian, &offset)
+	f.Close()
+	return offset
+}
+
+func writeInt64File(fname string, offset int64) {
+	f, err := os.OpenFile(fname, os.O_CREATE|os.O_WRONLY, 0600)
+	if err != nil {
+		log.Fatal("os.OpenFile", err)
+	}
+	// ignore irrelevant error
+	binary.Write(f, binary.LittleEndian, offset)
+	f.Close()
 }
 
 var apiPrefix string = "https://api.telegram.org/bot" + readSecreteToken()
@@ -41,7 +69,7 @@ func main() {
 	}
 	defer dumpFile.Close()
 
-	var msg_offset int64 = 0
+	var msg_offset int64 = readInt64File(msg_offset_file)
 
 	for {
 		resp, err := http.Get(apiPrefix + "/getUpdates?" + "offset=" + strconv.FormatInt(msg_offset, 10))
@@ -101,6 +129,7 @@ func main() {
 						if err != nil {
 							log.Fatal("http.Get", err)
 						}
+						writeInt64File(msg_offset_file, msg_offset)
 					}
 				}
 			}
