@@ -101,7 +101,9 @@ func main() {
 
 			reqestArgs = url.Values{}
 			reqestArgs.Add("chat_id", strconv.FormatInt(u.chat_id, 10))
-			reqestArgs.Add("text", "Hello")
+			reqestArgs.Add("text", "This bot just do nothing for you.\n"+
+				"Simply send anything you want and read this message =)\n\n"+
+				"You can use any command to get results, it doesn't help ^_____^")
 			_, err := http.Get(makeApiUrl("sendMessage", reqestArgs))
 			if err != nil {
 				log.Fatal("http.Get", err)
