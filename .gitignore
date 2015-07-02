@@ -28,3 +28,6 @@ secret_token
 
 # json API dump
 json_dump
+
+# file with last update_id message offset
+msg_offset
