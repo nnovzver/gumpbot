@@ -10,6 +10,7 @@ import "strconv"
 import "io/ioutil"
 import "flag"
 import "encoding/binary"
+import "net/url"
 
 const (
 	secret_token_file string = "secret_token"
@@ -47,7 +48,16 @@ func writeInt64File(fname string, offset int64) {
 	f.Close()
 }
 
-var apiPrefix string = "https://api.telegram.org/bot" + readSecreteToken()
+var apiSecretToken = readSecreteToken()
+
+func makeApiUrl(cmd string, args url.Values) string {
+	u := url.URL{}
+	u.Scheme = "https"
+	u.Host = "api.telegram.org"
+	u.Path = "bot" + apiSecretToken + "/" + cmd
+	u.RawQuery = args.Encode()
+	return u.String()
+}
 
 func main() {
 	var dumpFlag = flag.Bool("d", false, "dump json response into file json_dump")
@@ -66,7 +76,9 @@ func main() {
 	var msg_offset int64 = readInt64File(msg_offset_file)
 
 	for {
-		resp, err := http.Get(apiPrefix + "/getUpdates?" + "offset=" + strconv.FormatInt(msg_offset, 10))
+		reqestArgs := url.Values{}
+		reqestArgs.Add("offset", strconv.FormatInt(msg_offset, 10))
+		resp, err := http.Get(makeApiUrl("getUpdates", reqestArgs))
 		if err != nil {
 			log.Fatal("http.Get", err)
 		}
@@ -87,9 +99,10 @@ func main() {
 			log.Printf("%#v\n", u)
 			msg_offset = int64(u.update_id) + 1
 
-			_, err := http.Get(apiPrefix + "/sendMessage?" +
-				"chat_id=" + strconv.FormatInt(int64(u.chat_id), 10) +
-				"&text=Hello")
+			reqestArgs = url.Values{}
+			reqestArgs.Add("chat_id", strconv.FormatInt(u.chat_id, 10))
+			reqestArgs.Add("text", "Hello")
+			_, err := http.Get(makeApiUrl("sendMessage", reqestArgs))
 			if err != nil {
 				log.Fatal("http.Get", err)
 			}

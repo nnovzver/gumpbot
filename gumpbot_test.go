@@ -3,6 +3,7 @@ package main
 import "testing"
 import "bytes"
 import "reflect"
+import "net/url"
 
 var byteResponse = []byte(`
 {"ok":true,
@@ -43,5 +44,15 @@ func TestUnmarshalResponse(t *testing.T) {
 	}
 	if !reflect.DeepEqual(resp[1], UpdatePayload{update_id: 521595394, chat_id: 12341599, text: `/start`}) {
 		t.Error("invalid resp[1]")
+	}
+}
+
+func TestMakeApiUrl(t *testing.T) {
+	apiSecretToken = "54321"
+	args := url.Values{}
+	args.Add("offset", "12345")
+	if makeApiUrl("getUpdates", args) !=
+		"https://api.telegram.org/bot54321/getUpdates?offset=12345" {
+		t.Error("invalid URL")
 	}
 }
