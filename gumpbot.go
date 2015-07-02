@@ -60,6 +60,9 @@ func makeApiUrl(cmd string, args url.Values) string {
 }
 
 func main() {
+	// config standard logger
+	log.SetFlags(log.Lshortfile)
+
 	var dumpFlag = flag.Bool("d", false, "dump json response into file json_dump")
 	flag.Parse()
 
