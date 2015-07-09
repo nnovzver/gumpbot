@@ -125,27 +125,47 @@ type UpdatePayload struct {
 	text      string
 }
 
-func UnmarshalResponse(respReader io.Reader) ([]UpdatePayload, error) {
-	dec := json.NewDecoder(respReader)
-	var resp map[string]interface{}
-	var err error
-	var updates []UpdatePayload
-	for {
-		err = dec.Decode(&resp)
-		if err != nil {
-			if err == io.EOF {
-				err = nil
-				break
+type Update struct {
+	Ok     bool
+	Result []struct {
+		Update_id float64
+		Message   struct {
+			Message_id float64
+			From       struct {
+				Id         float64
+				First_name string
+				Last_name  string
+				Username   string
 			}
-			return nil, err
-		}
-
-		for _, u := range resp["result"].([]interface{}) {
-			updates = append(updates, UpdatePayload{})
-			updates[len(updates)-1].update_id = int64(u.(map[string]interface{})["update_id"].(float64))
-			updates[len(updates)-1].text = u.(map[string]interface{})["message"].(map[string]interface{})["text"].(string)
-			updates[len(updates)-1].chat_id = int64(u.(map[string]interface{})["message"].(map[string]interface{})["chat"].(map[string]interface{})["id"].(float64))
+			Chat struct {
+				Id         float64
+				First_name string
+				Last_name  string
+				Username   string
+			}
+			Date float64
+			Text string
 		}
 	}
+}
+
+func UnmarshalResponse(respReader io.Reader) ([]UpdatePayload, error) {
+	var resp Update
+	var err error
+	var updates []UpdatePayload
+
+	dec := json.NewDecoder(respReader)
+	err = dec.Decode(&resp)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, r := range resp.Result {
+		updates = append(updates, UpdatePayload{})
+		updates[len(updates)-1].update_id = int64(r.Update_id)
+		updates[len(updates)-1].text = r.Message.Text
+		updates[len(updates)-1].chat_id = int64(r.Message.Chat.Id)
+	}
+
 	return updates, err
 }
