@@ -1,9 +1,11 @@
 package main
 
-import "testing"
-import "bytes"
-import "reflect"
-import "net/url"
+import (
+	"bytes"
+	"net/url"
+	"reflect"
+	"testing"
+)
 
 var byteResponse = []byte(`
 {"ok":true,

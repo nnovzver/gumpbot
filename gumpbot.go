@@ -1,16 +1,18 @@
 package main
 
-import "net/http"
-import "log"
-import "io"
-import "os"
-import "time"
-import "encoding/json"
-import "strconv"
-import "io/ioutil"
-import "flag"
-import "encoding/binary"
-import "net/url"
+import (
+	"encoding/binary"
+	"encoding/json"
+	"flag"
+	"io"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"net/url"
+	"os"
+	"strconv"
+	"time"
+)
 
 const (
 	secret_token_file string = "secret_token"
